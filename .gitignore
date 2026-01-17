@@ -1,0 +1,43 @@
+# Delphi build directories
+Win32/Debug/
+Win32/Release/
+Win64/Debug/
+Win64/Release/
+OSX32/Debug/
+OSX32/Release/
+iOSDevice64/Debug/
+iOSDevice64/Release/
+iOSSimulator/Debug/
+iOSSimulator/Release/
+Android/Debug/
+Android/Release/
+
+# Delphi generated files
+*.dcu
+*.dcp
+*.dcpil
+*.drc
+*.map
+*.hpp
+*.obj
+*.local
+*.identcache
+*.tvsconfig
+*.stat
+
+# Backup & history
+__history/
+__recovery/
+
+# Binaries
+*.exe
+*.dll
+*.apk
+*.ipa
+
+# Logs
+*.log
+
+# Other
+*.tmp
+*.bak
