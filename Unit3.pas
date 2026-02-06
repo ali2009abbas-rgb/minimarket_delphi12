@@ -188,11 +188,11 @@ begin
 
     // **1. Êßæíä ÇáÇÓÊÚáÇã ÈÇáßÇãá ÃæáÇð (ãÚ ÇáÈÇÑÇãÊÑÇÊ :Start æ :End)**
     QryTotal.SQL.Add('SELECT SUM(CDbl(LineProfitUSD)) AS TotalProfit, SUM(CDbl(LineTotalSYP)) AS Totalsy FROM [Sales$]');
-    QryTotal.SQL.Add('WHERE SaleDate >= CDate(:Start) AND SaleDate <= CDate(:End)');
+    QryTotal.SQL.Add('WHERE SaleDate >= :Start AND SaleDate <= :End');
 
     // **2. ÊÚííä ÞíãÉ ÇáÈÇÑÇãÊÑÇÊ (áÍá ãÔßáÉ Parameter not found)**
-    QryTotal.Parameters.ParamByName('Start').Value := FormatDateTime('yyyy-mm-dd', StartDate);
-    QryTotal.Parameters.ParamByName('End').Value := FormatDateTime('yyyy-mm-dd', EndDate);
+    QryTotal.Parameters.ParamByName('Start').Value := StartDate;
+    QryTotal.Parameters.ParamByName('End').Value := EndDate;
 
     // **3. ÝÊÍ ÇáÇÓÊÚáÇã (íÌÈ Ãä íÃÊí ÈÚÏ ÊÚííä ÇáÈÇÑÇãÊÑÇÊ)**
     QryTotal.Open;
@@ -229,8 +229,8 @@ QryProfit.Close;
   QryProfit.SQL.Add('WHERE SaleDate >= CDate(:Start) AND SaleDate <= CDate(:End)');
 
   // **2. ÊÚííä ÞíãÉ ÇáÈÇÑÇãÊÑÇÊ**
-  QryProfit.Parameters.ParamByName('Start').Value := FormatDateTime('yyyy-mm-dd', StartDate);
-  QryProfit.Parameters.ParamByName('End').Value := FormatDateTime('yyyy-mm-dd', EndDate);
+  QryProfit.Parameters.ParamByName('Start').Value := StartDate;
+  QryProfit.Parameters.ParamByName('End').Value := EndDate;
 
   // **3. ÝÊÍ ÇáÇÓÊÚáÇã**
   QryProfit.Open;

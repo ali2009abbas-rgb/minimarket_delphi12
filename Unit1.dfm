@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   BiDiMode = bdLeftToRight
-  Caption = #1605#1585#1603#1586' '#1581#1610#1575#1604#1610#1606' '#1580#1605#1604#1577' '#1608#1605#1601#1585#1602
+  Caption = #1605#1585#1603#1586' '#1586#1575#1583' '#1575#1604#1582#1610#1585' '#1580#1605#1604#1577' '#1608#1605#1601#1585#1602
   ClientHeight = 703
   ClientWidth = 1552
   Color = clWindow
@@ -3301,11 +3301,11 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label9: TLabel
-    Left = 135
-    Top = 3
-    Width = 107
+    Left = 291
+    Top = 130
+    Width = 114
     Height = 32
-    Caption = #1575#1587#1605' '#1575#1604#1586#1576#1608#1606
+    Caption = ':'#1575#1587#1605' '#1575#1604#1586#1576#1608#1606
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clPurple
     Font.Height = -24
@@ -3342,6 +3342,20 @@ object Form1: TForm1
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
+  end
+  object Label11: TLabel
+    Left = 24
+    Top = 8
+    Width = 144
+    Height = 32
+    Caption = #1605#1585#1603#1586':  '#1586#1575#1583' '#1575#1604#1582#1610#1585
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clMaroon
+    Font.Height = -24
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Visible = False
   end
   object EditExchangeRate: TEdit
     Left = 516
@@ -3507,10 +3521,10 @@ object Form1: TForm1
     OnClick = ButtonCompleteSaleClick
   end
   object EditCustomerName: TEdit
-    Left = 60
-    Top = 41
-    Width = 289
-    Height = 33
+    Left = 8
+    Top = 133
+    Width = 279
+    Height = 38
     Alignment = taRightJustify
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -3536,8 +3550,8 @@ object Form1: TForm1
     OnClick = ButtonShowReportClick
   end
   object Panel1: TPanel
-    Left = 8
-    Top = 263
+    Left = -8
+    Top = 304
     Width = 1552
     Height = 105
     Align = alCustom
@@ -3709,5 +3723,19 @@ object Form1: TForm1
     OnTimer = Timer1Timer
     Left = 7
     Top = 208
+  end
+  object Timer2: TTimer
+    Enabled = False
+    Interval = 3000
+    OnTimer = Timer2Timer
+    Left = 256
+    Top = 96
+  end
+  object Timer3: TTimer
+    Enabled = False
+    Interval = 2000
+    OnTimer = Timer3Timer
+    Left = 184
+    Top = 128
   end
 end

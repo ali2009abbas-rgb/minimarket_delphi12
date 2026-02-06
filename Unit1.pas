@@ -48,6 +48,9 @@ type
     ButtonAddItem: TButton;
     ButtonEditItem: TButton;
     ButtonEditRate: TButton;
+    Timer2: TTimer;
+    Label11: TLabel;
+    Timer3: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure EditSearchItemNameChange(Sender: TObject);
     procedure ButtonAddClick(Sender: TObject);
@@ -61,6 +64,8 @@ type
     procedure ButtonEditItemClick(Sender: TObject);
     procedure ButtonEditRateClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Timer2Timer(Sender: TObject);
+    procedure Timer3Timer(Sender: TObject);
   private
     { Private declarations }
 
@@ -306,12 +311,12 @@ begin
           //QrySalesInsert.SQL.Add('VALUES (:ID, :Date, :CustName, :Item, :Qty, :UnitP, :LineT, :Cost, :Profit,:SalePriceUSD)');
 
           QrySalesInsert.SQL.Add('INSERT INTO [Sales$] (InvoiceID, SaleDate, CustomerName, ItemName, Quantity, UnitPriceSYP, LineTotalSYP, UnitCostUSD, LineProfitUSD, PriceUSD)');
-          QrySalesInsert.SQL.Add('VALUES (:ID, :Date, ' + QuotedStr(CustomerName) + ', ' + QuotedStr(ItemName) + ', :Qty, :UnitP, :LineT, :Cost, :Profit,:SalePriceUSD)');
+          QrySalesInsert.SQL.Add('VALUES (:ID, :Date, :CustName, :Item, :Qty, :UnitP, :LineT, :Cost, :Profit,:SalePriceUSD)');
 
           QrySalesInsert.Parameters.ParamByName('ID').Value := CurrentInvoiceID;
           QrySalesInsert.Parameters.ParamByName('Date').Value := Date;
-        //  QrySalesInsert.Parameters.ParamByName('CustName').Value := CustomerName;
-        //  QrySalesInsert.Parameters.ParamByName('Item').Value := ItemName;
+          QrySalesInsert.Parameters.ParamByName('CustName').Value := CustomerName;
+          QrySalesInsert.Parameters.ParamByName('Item').Value := ItemName;
           QrySalesInsert.Parameters.ParamByName('Qty').Value := QuantitySold;
           QrySalesInsert.Parameters.ParamByName('UnitP').Value := UnitPrice;
           QrySalesInsert.Parameters.ParamByName('LineT').Value := LineTotal;
@@ -325,7 +330,8 @@ begin
       except
         on E: Exception do
         begin
-          ShowMessage('خطأ في حفظ سجل المبيعات للسلعة: ' + ItemName + '. الخطأ: ' + E.Message);
+          //ShowMessage('خطأ في حفظ سجل المبيعات للسلعة: ' + ItemName + '. الخطأ: ' + E.Message);
+          raise Exception.Create('خطأ في حفظ سجل المبيعات للسلعة: ' + ItemName + sLineBreak + E.Message);
         end;
       end;
 
@@ -520,7 +526,8 @@ begin
   // 2. قراءة القيمة الحالية من ورقة Excel (يبقى كما هو)
   QryExchangeRate.Close;
   QryExchangeRate.SQL.Clear;
-  QryExchangeRate.SQL.Add('SELECT RateSYP FROM [ExchangeRate$] WHERE [nameDate] = #' + TodayDate + '#');
+  QryExchangeRate.SQL.Add('SELECT RateSYP FROM [ExchangeRate$] WHERE [nameDate] = :D');
+  QryExchangeRate.Parameters.ParamByName('D').Value := Date;
   QryExchangeRate.Open;
 
   if QryExchangeRate.IsEmpty then
@@ -555,7 +562,7 @@ begin
           QryExchangeRate.SQL.Clear;
           QryExchangeRate.SQL.Add('UPDATE [ExchangeRate$] SET RateSYP = :R WHERE [nameDate] = :D');
           QryExchangeRate.Parameters.ParamByName('R').Value := NewRate;
-          QryExchangeRate.Parameters.ParamByName('D').Value := FormatDateTime('dd/mm/yyyy', Date);
+          QryExchangeRate.Parameters.ParamByName('D').Value := Date;
           QryExchangeRate.ExecSQL;
 
           // ج. الالتزام القسري بالحفظ (Commit)
@@ -714,7 +721,8 @@ begin
 
         try
           QryExchangeRate.SQL.Clear;
-          QryExchangeRate.SQL.Add('SELECT RateSYP FROM [ExchangeRate$] WHERE [nameDate] = #' + TodayDate + '#');
+          QryExchangeRate.SQL.Add('SELECT RateSYP FROM [ExchangeRate$] WHERE [nameDate] = :D');
+          QryExchangeRate.Parameters.ParamByName('D').Value := Date;
           QryExchangeRate.Open;
 
           if QryExchangeRate.IsEmpty then
@@ -726,7 +734,7 @@ begin
                 QryExchangeRate.Close;
                 QryExchangeRate.SQL.Clear;
                 QryExchangeRate.SQL.Add('INSERT INTO [ExchangeRate$] ([nameDate], RateSYP) VALUES (:D, :R)');
-                QryExchangeRate.Parameters.ParamByName('D').Value := FormatDateTime('dd/mm/yyyy', Date);
+                QryExchangeRate.Parameters.ParamByName('D').Value := Date;
                 QryExchangeRate.Parameters.ParamByName('R').Value := RateValue;
                 QryExchangeRate.ExecSQL;
 
@@ -815,6 +823,7 @@ begin
   end
   else
     Application.Terminate;}
+    Timer2.Enabled:= True;
 end;
 
 
@@ -899,60 +908,44 @@ begin
 end;
 
 
-
 procedure TForm1.PreparePrintReport(InvoiceID: Integer; CustomerName: string; GrandTotal: Double; SalesGrid: TStringGrid);
-var
-  i: Integer;
-begin
-  // ********** 1. ضمان وجود النموذج في الذاكرة **********
-  // هذا يحل مشكلة Access Violation (الذاكرة) التي تحدث بعد طباعة الفاتورة الأولى.
-  // إذا تم تدمير النموذج (بسبب OnClose + caFree)، نقوم بإنشائه مرة أخرى.
-  if not Assigned(PrintPreviewForm) then
-  begin
-    // تأكد أن TPrintPreviewForm هو اسم النموذج في Unit2
-    Application.CreateForm(TPrintPreviewForm, PrintPreviewForm);
-  end;
+ var i: Integer;
+  LineStr: string;
+   const FmtStr = '%12s %8s %-20s';
+   const FmtStr2 = '%12s %6s   %-20s';
+    begin
+     if not Assigned(PrintPreviewForm) then
+Application.CreateForm(TPrintPreviewForm, PrintPreviewForm);
 
-  // ********** 2. تجهيز محتوى الطباعة في MemoReport **********
+PrintPreviewForm.MemoReport.Lines.Clear;
+ PrintPreviewForm.MemoReport.Font.Name := 'Courier New';
+  PrintPreviewForm.MemoReport.Font.Size := 10;
+ //  PrintPreviewForm.MemoReport.BiDiMode := bdLeftToRight;
+//    PrintPreviewForm.MemoReport.Paragraph.Alignment := taRightJustify;
 
-  // مسح المحتوى القديم للطباعة
-  PrintPreviewForm.MemoReport.Lines.Clear;
-
-  // تنسيق رأس الفاتورة
-  PrintPreviewForm.MemoReport.Lines.Add('          فاتورة متجر حيالين      ');
-  PrintPreviewForm.MemoReport.Lines.Add('**************************************');
+PrintPreviewForm.MemoReport.Lines.Add(' فاتورة متجر زاد الخير ');
+ PrintPreviewForm.MemoReport.Lines.Add('****************************************');
   PrintPreviewForm.MemoReport.Lines.Add('رقم الفاتورة: ' + IntToStr(InvoiceID));
-  PrintPreviewForm.MemoReport.Lines.Add('التاريخ: ' + FormatDateTime('yyyy-mm-dd', Date));
-  PrintPreviewForm.MemoReport.Lines.Add('اسم الزبون: ' + CustomerName);
-  PrintPreviewForm.MemoReport.Lines.Add('--------------------------------------');
+   PrintPreviewForm.MemoReport.Lines.Add('التاريخ: ' + FormatDateTime('yyyy-mm-dd', Date));
+    PrintPreviewForm.MemoReport.Lines.Add('اسم الزبون: ' + CustomerName);
+     PrintPreviewForm.MemoReport.Lines.Add('----------------------------------------');
 
-  // تنسيق جدول البنود (البضاعة، الكمية، الإجمالي)
-  PrintPreviewForm.MemoReport.Lines.Add(Format('%10s %6s %-20s', ['البضاعة', 'الكمية', 'الإجمالي (ل.س)']));
-  PrintPreviewForm.MemoReport.Lines.Add('--------------------------------------');
+// لاحظ الترتيب هنا: الإجمالي أولاً ليتطابق مع البيانات بالأسفل
+PrintPreviewForm.MemoReport.Lines.Add(Format(FmtStr, ['الإجمالي', 'الكمية', 'المادة']));
+ PrintPreviewForm.MemoReport.Lines.Add('----------------------------------------');
 
-  // إضافة البنود من SalesGrid
-  for i := 1 to SalesGrid.RowCount - 1 do
-  begin
-    // Column 0: ItemName, Column 2: Quantity, Column 3: LineTotalSYP
-    PrintPreviewForm.MemoReport.Lines.Add(
-      Format('%-20s %6s %10s',
-        [SalesGrid.Cells[0, i], SalesGrid.Cells[2, i], SalesGrid.Cells[3, i]]
-      )
-    );
-  end;
+for i := 1 to SalesGrid.RowCount - 1 do
+ begin
+  // ترتيب الخلايا: 3 (إجمالي)، 2 (كمية)، 0 (ا سم)
+ LineStr := Format(FmtStr2, [ SalesGrid.Cells[3, i], SalesGrid.Cells[2, i], SalesGrid.Cells[0, i]]);
+ PrintPreviewForm.MemoReport.Lines.Add(LineStr); end;
 
-  // تنسيق الذيل والإجمالي
-  PrintPreviewForm.MemoReport.Lines.Add('--------------------------------------');
-  PrintPreviewForm.MemoReport.Lines.Add(Format('%-20s %6s %10s', ['الإجمالي الكلي:', '', FormatFloat('0.00', GrandTotal)]));
-  PrintPreviewForm.MemoReport.Lines.Add('**************************************');
+PrintPreviewForm.MemoReport.Lines.Add('----------------------------------------');
+ PrintPreviewForm.MemoReport.Lines.Add('الإجمالي الكلي: ' + FormatFloat('0.00', GrandTotal) + ' ل.س');
+  PrintPreviewForm.MemoReport.Lines.Add('****************************************');
 
-  // ********** 3. عرض النموذج **********
-  // إيقاف البرنامج مؤقتاً حتى يغلق المستخدم نافذة المعاينة
-  PrintPreviewForm.ShowModal;
-
-  // بما أن FormClose في PrintPreviewForm تحتوي على Action := caFree;،
-  // فإن النموذج يدمر نفسه ذاتياً بعد الإغلاق.
-end;
+PrintPreviewForm.ShowModal;
+ end;
 
 
 procedure TForm1.Timer1Timer(Sender: TObject);
@@ -964,5 +957,20 @@ Timer1.Enabled:=false;
 EditSearchItemName.SetFocus;
 end;
 
+
+procedure TForm1.Timer2Timer(Sender: TObject);
+begin
+Label11.Visible:=True;
+Timer3.Enabled:=True;
+Timer2.Enabled:=false;
+
+end;
+
+procedure TForm1.Timer3Timer(Sender: TObject);
+begin
+Label11.Visible:=False;
+Timer2.Enabled:=true;
+Timer3.Enabled:=false;
+end;
 
 end.

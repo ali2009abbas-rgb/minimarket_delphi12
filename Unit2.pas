@@ -15,6 +15,7 @@ type
     procedure ButtonPrintClick(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject); // ÅÖÇİÉ ÍÏË ÚäÏ ÅäÔÇÁ ÇáäãæĞÌ
   private
     { Private declarations }
   public
@@ -28,34 +29,34 @@ implementation
 
 {$R *.dfm}
 
+procedure TPrintPreviewForm.FormCreate(Sender: TObject);
+begin
+MemoReport.WordWrap := False;
+end;
+
 procedure TPrintPreviewForm.ButtonPrintClick(Sender: TObject);
 var
   Title: string;
 begin
-  // 1. ÚÑÖ ãÑÈÚ ÍæÇÑ ÇáØÈÇÚÉ ááÓãÇÍ ááãÓÊÎÏã ÈÇáÇÎÊíÇÑ
   if PrintDialog1.Execute then
   begin
-    // 2. ÅĞÇ ÖÛØ ÇáãÓÊÎÏã Úáì ãæÇİŞ (OK)¡ ÇÈÏÃ ÇáØÈÇÚÉ
-    Title := 'İÇÊæÑÉ ãÈíÚÇÊ'; // ÇáÚäæÇä ÇáĞí ÓíÙåÑ İí ÑÃÓ ÕİÍÉ ÇáØÈÇÚÉ
+    Title := 'İÇÊæÑÉ ãÈíÚÇÊ - ãÊÌÑ ÍíÇáíä';
 
-    // **ØÈÇÚÉ ãÍÊæì MemoReport**
-    // MemoReport.Print(Title) ÊÑÓá ÇáãÍÊæì Åáì ÇáØÇÈÚÉ ÇáãÍÏÏÉ İí PrintDialog1
+    // ÊÃßíÏ ÇáÇÊÌÇå ãÑÉ ÃÎÑì ŞÈá ÇáØÈÇÚÉ
+    MemoReport.BiDiMode := bdRightToLeft;
+
     MemoReport.Print(Title);
   end;
 end;
 
-
-
-procedure TPrintPreviewForm.FormClose(Sender: TObject;
-  var Action: TCloseAction);
+procedure TPrintPreviewForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-Action := caFree;
-PrintPreviewForm := nil;
+  Action := caFree;
+  PrintPreviewForm := nil;
 end;
 
 procedure TPrintPreviewForm.ButtonCloseClick(Sender: TObject);
 begin
-  // ÅÛáÇŞ äÇİĞÉ ÇáãÚÇíäÉ
   Close;
 end;
 
